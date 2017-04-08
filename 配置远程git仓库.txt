@@ -1,0 +1,85 @@
+1.yum安装git服务器
+2.创建一个git用户，并用git用户创建配置文件，如客户端登录证书
+3.初始化git仓库，git init 是可以各种操作的初始化仓库，git init --bare project.git只能push的空仓库
+4.禁用git用户远程shell操作
+5.克隆远程仓库
+
+
+1.yum安装Git服务器
+//安装依赖
+//wget http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
+//rpm -ivh epel-release-5-4.noarch.rpm
+
+使用root用户 
+yum install git
+
+2.创建git用户，用来运行git服务
+roo用户操作
+adduser git
+
+git用户操作，创建登录证书
+su git//切换git用户
+ssh-keygen -t rsa//一路回车即可，这样下次Git登录可以不用密码会在/home/git/.ssh下生成私匙id-rsa， 公匙id_rsa.pub，authorized_keys用户存放公匙的文件如果不存在自己用git生成
+在不生成下手动创建，如：
+sudo adduser git
+su - git
+mkdir .ssh
+chmod 700 .ssh
+touch ~/.ssh/authorized_keys 
+chmod 644 ~/.ssh/authorized_keys
+vim ~/.ssh/authorized_keys
+
+找到想要创建空仓库的文件夹下
+root用户操作，gi init --bare project.git//只接受推送的空仓库，裸仓库没有工作区，纯属为了共享
+为了不让用户直接登录大服务器上去改工作区
+chown -R git.git project.git
+// ls -l 显示drwxr-xr-x 7 git git 4096 05-09 13:50 project.git
+
+3禁用shell登录
+vim /etc/passwd
+git:x:1001:1001:git version control:/home/git:/bin/bash改为git:x:1001:1001:git version control:/home/git:/usr/bin/git-shell
+//这样，git用户可以正常通过ssh使用git，但无法登录shell，因为我们为git用户指定的git-shell每次一登录就自动退出。
+
+下面是关键，上面的网上都有讲，下面的很多人都忽略了，即sshd相关设置问题:
+打开文件/etc/ssh/sshd_config
+RSAAuthentication yes            #开启RSA认证功能
+PubkeyAuthentication yes      #开启公匙认证
+StricModes no                          #据说不改会强制要求登录用户和文件拥有者用户相同
+有了上面步骤，git服务器用起来就方便多了.......
+
+
+无法更新上去可能这就是权限问题，解决办法如下：
+chown -vR git *
+
+Git: push 出错的解决 master -> master (branch is currently checked out)
+这是由于git默认拒绝了push操作，需要进行设置，修改.git/config添加如下代码：
+    [receive]
+    denyCurrentBranch = ignore
+git warning: LF will be replaced by CRLF in 解决办法//本身没影响
+git config core.autocrlf false
+
+4.客户端安装跟服务器安装大同小异，window安装用.exe文件安装就好
+克隆//安装后git后，一般都能克隆操作
+本地先git init仓库
+git clone git@域名或者IP:/data/git/project.git
+git clone git@域名或者IP:/这里git init全路径
+
+本地修改后执行
+git add
+然后
+git commit -m "写东西"
+然后更新到服务器上
+git push
+取回远程主机的更新//先执行
+git pull
+
+
+服务上
+git checkout
+
+git ls-tree HEAD
+
+查看提交的具体信息及改变：
+git show {commit hash}
+
+
