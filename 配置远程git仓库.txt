@@ -3,7 +3,7 @@
 3.初始化git仓库，git init 是可以各种操作的初始化仓库，git init --bare project.git只能push的空仓库
 4.禁用git用户远程shell操作
 5.克隆远程仓库
-
+xxxx
 
 1.yum安装Git服务器
 //安装依赖
